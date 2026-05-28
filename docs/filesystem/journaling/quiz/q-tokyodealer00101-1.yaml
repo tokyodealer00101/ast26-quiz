@@ -1,9 +1,7 @@
 author: tokyodealer00101
 date: 2026-05-27
 question: |
-  某個 `ext4` FastCommit 系統平常處理的是 append、link/unlink 這類可由 `FCLog` tag 描述的常見檔案操作，因此多數 `fsync()` 不需要立刻寫完整 metadata block image。後來某次請求觸發一個沒有對應 `FCLog` tag 的 metadata 更新；但系統仍要保證：`fsync()` 回傳成功時，這次修改已經持久化。
-
-  下列哪個處理方式最符合 FastCommit 的 hybrid 設計？
+  FastCommit 用精簡的 `FCLog` 描述常見操作來加速 `fsync()`，但 `FCLog` 只能描述固定幾種操作。當 `fsync()` 遇到 `FCLog` 無法描述的 metadata 更新時，FastCommit 該怎麼保證 `fsync()` 回傳時資料已持久化？
 options:
   - text: "這次 `fsync()` 應退回 `JBD2` physical commit，讓完整 metadata block image 進 journal；之後可描述的常見操作再繼續寫 `FCLog`。"
     correct: true
