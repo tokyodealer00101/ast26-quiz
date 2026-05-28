@@ -1,0 +1,29 @@
+author: tokyodealer00101
+date: 2026-05-28
+question: |
+  某個 Log-Structured File System 將磁碟切成固定大小的 segment。每個 segment 都有 100 個 blocks，背景 cleaner 準備挑一個 victim segment 做 `segment cleaning`。清理時，系統必須先把仍有效的 blocks 複製到新的 log tail，舊 segment 才能整段釋放。
+
+  目前候選 segment 如下：
+
+  | Segment | 資料特性 | valid blocks | invalid blocks |
+  |---|---|---:|---:|
+  | S0 | 最早寫入，偏 cold | 82 | 18 |
+  | S1 | 最近寫入，偏 hot | 20 | 80 |
+  | S2 | 較早寫入，偏 hot | 45 | 55 |
+  | S3 | 較新寫入，偏 cold | 68 | 32 |
+
+  若目標是在這次 cleaning 中用較低搬移成本回收較多可用空間，應優先選哪個 segment？
+options:
+  - text: "選 S0，因為它最早寫入且偏 cold，清掉它可以讓 log 的舊區段先被回收，避免舊資料長期留在磁碟上。"
+    explanation: |
+      S0 雖然最早寫入，但仍有 82 個 valid blocks。LFS 在清理 segment 時必須把這些仍有效的 blocks 搬到新的 log tail，搬移成本很高，而且只能回收 18 個 invalid blocks 對應的空間。
+  - text: "選 S1，因為它最近寫入且偏 hot，目前只剩少量 blocks 還有效，清理後舊 segment 中大部分空間都能被釋放。"
+    correct: true
+    explanation: |
+      S1 需要搬移的 valid blocks 最少，且能回收的 invalid blocks 最多。`segment cleaning` 的搬移成本主要來自仍有效的 blocks；在題目限定的「這次 cleaning」目標下，S1 的成本效益最好。
+  - text: "選 S2，因為它是偏 hot 的 segment，未來資料可能很快又被覆寫，先清理它可以讓後續 append write 更容易維持 sequential write。"
+    explanation: |
+      S2 的資料偏 hot，代表之後可能產生更多 invalid blocks，但題目問的是現在要挑哪個 victim segment。S2 目前仍要搬移 45 個 valid blocks，成本高於 S1；是否偏 hot 不能取代目前 valid / invalid 數量的判斷。
+  - text: "選 S3，因為它偏 cold 且仍有 68 個 valid blocks，把這些資料集中搬到 log tail 後，可以減少之後讀取時的 fragmentation。"
+    explanation: |
+      S3 要搬移 68 個 valid blocks，卻只能回收 32 個 invalid blocks 對應的空間，清理成本不划算。`segment cleaning` 的直接目標是回收空間，不是主動搬移大量仍有效的冷資料。
