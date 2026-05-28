@@ -1,7 +1,7 @@
 author: tokyodealer00101
 date: 2026-05-28
 question: |
-  索引大小超過 buffer pool 時，哪種資料結構比較適合做成可以被 buffer manager 換出到 SSD 的索引，主要原因是什麼？
+  索引大小超過 buffer pool 時，下列哪種資料結構最適合讓 buffer manager 換出到 SSD？
 options:
   - text: "Adaptive B-Tree 較適合，因為它維持固定大小 page 與 page 內 record layout；buffer manager 可以用 page 為單位換出與讀回，較高的空間效率也能減少 SSD I/O。"
     correct: true
