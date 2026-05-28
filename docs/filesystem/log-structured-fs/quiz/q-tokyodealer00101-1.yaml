@@ -5,19 +5,19 @@ question: |
 
   目前候選 segment 如下：
 
-  | Segment | 資料特性 | valid blocks | invalid blocks |
+  | Segment | 更新型態 | valid blocks | invalid blocks |
   |---|---|---:|---:|
-  | S0 | 最早寫入，偏 cold | 82 | 18 |
-  | S1 | 最近寫入，偏 hot | 20 | 80 |
-  | S2 | 較早寫入，偏 hot | 45 | 55 |
-  | S3 | 較新寫入，偏 cold | 68 | 32 |
+  | S0 | 偏 cold，少被覆寫 | 82 | 18 |
+  | S1 | 偏 hot，常被覆寫 | 20 | 80 |
+  | S2 | 偏 hot，常被覆寫 | 45 | 55 |
+  | S3 | 偏 cold，少被覆寫 | 68 | 32 |
 
   若目標是在這次 cleaning 中用較低搬移成本回收較多可用空間，應優先選哪個 segment？
 options:
-  - text: "選 S0，因為它最早寫入且偏 cold，清掉它可以讓 log 的舊區段先被回收，避免舊資料長期留在磁碟上。"
+  - text: "選 S0，因為它偏 cold，清理後比較不會很快又產生新的 invalid blocks，可以避免 cleaner 反覆處理同類資料。"
     explanation: |
-      S0 雖然最早寫入，但仍有 82 個 valid blocks。LFS 在清理 segment 時必須把這些仍有效的 blocks 搬到新的 log tail，搬移成本很高，而且只能回收 18 個 invalid blocks 對應的空間。
-  - text: "選 S1，因為它最近寫入且偏 hot，目前只剩少量 blocks 還有效，清理後舊 segment 中大部分空間都能被釋放。"
+      S0 雖然偏 cold，但仍有 82 個 valid blocks。LFS 在清理 segment 時必須把這些仍有效的 blocks 搬到新的 log tail，搬移成本很高，而且只能回收 18 個 invalid blocks 對應的空間。
+  - text: "選 S1，因為它偏 hot 且多數 blocks 已經失效，清理時只需要搬移少量仍有效的資料。"
     correct: true
     explanation: |
       S1 需要搬移的 valid blocks 最少，且能回收的 invalid blocks 最多。`segment cleaning` 的搬移成本主要來自仍有效的 blocks；在題目限定的「這次 cleaning」目標下，S1 的成本效益最好。
