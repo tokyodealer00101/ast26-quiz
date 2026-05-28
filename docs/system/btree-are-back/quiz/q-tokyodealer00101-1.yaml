@@ -1,12 +1,12 @@
 author: tokyodealer00101
 date: 2026-05-28
 question: |
-  索引大小已超過 buffer pool，需要讓較冷的索引資料能被換出到 SSD。根據 BAB 章節，下列哪個判斷最合理？
+  索引大小已超過 buffer pool，需要讓較冷的索引資料能被換出到 SSD。在這個場景中，下列哪個判斷最合理？
 options:
   - text: "Adaptive B-Tree 較適合這種場景，因為它保留固定大小 page 與 page 內 record layout，buffer manager 能以 page 為單位管理 I/O；空間效率提升也會降低換頁壓力。"
     correct: true
     explanation: |
-      BAB 章節指出，B-Tree 的 page-oriented layout 適合交給 buffer manager 管理；prefix truncation 與 dense leaves 等設計也提升空間效率，資料超過 buffer pool 時能減少需要從 SSD 讀回的 page 數。
+      B-Tree 的 page-oriented layout 適合交給 buffer manager 管理；prefix truncation 與 dense leaves 等設計也提升空間效率，資料超過 buffer pool 時能減少需要從 SSD 讀回的 page 數。
 
   - text: "Wormhole 較適合這種場景，因為 trie 與 hash table 可以減少 lookup 經過的索引層數，資料超過 buffer pool 時仍能降低查找路徑上的 CPU 成本。"
     explanation: |
