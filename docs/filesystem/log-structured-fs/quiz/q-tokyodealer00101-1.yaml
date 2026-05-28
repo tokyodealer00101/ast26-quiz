@@ -23,7 +23,7 @@ options:
       S1 需要搬移的 valid blocks 最少，且能回收的 invalid blocks 最多。`segment cleaning` 的搬移成本主要來自仍有效的 blocks；依表中的 valid / invalid blocks 數量判斷，S1 的成本效益最好。
   - text: "選 S2，因為它是偏 hot 的 segment，未來資料可能很快又被覆寫，先清理它可以讓後續 append write 更容易維持 sequential write。"
     explanation: |
-      S2 的資料偏 hot，代表之後可能產生更多 invalid blocks，但題目問的是要從表中挑哪個 victim segment。S2 目前仍要搬移 45 個 valid blocks，成本高於 S1；是否偏 hot 不能取代目前 valid / invalid 數量的判斷。
+      S2 的資料偏 hot，代表之後可能產生更多 invalid blocks，但 cleaner 要根據表中的狀態挑一個 victim segment。S2 目前仍要搬移 45 個 valid blocks，成本高於 S1；是否偏 hot 不能取代目前 valid / invalid 數量的判斷。
   - text: "選 S3，因為它偏 cold 且仍有 68 個 valid blocks，把這些資料集中搬到 log tail 後，可以減少之後讀取時的 fragmentation。"
     explanation: |
       S3 要搬移 68 個 valid blocks，卻只能回收 32 個 invalid blocks 對應的空間，清理成本不划算。`segment cleaning` 的直接目標是回收空間，不是主動搬移大量仍有效的冷資料。
