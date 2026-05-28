@@ -1,0 +1,21 @@
+author: tokyodealer00101
+date: 2026-05-28
+question: |
+  索引大小已超過 buffer pool，需要讓較冷的索引資料能被換出到 SSD。根據 BAB 章節，下列哪個判斷最合理？
+options:
+  - text: "Adaptive B-Tree 較適合這種場景，因為它保留固定大小 page 與 page 內 record layout，buffer manager 能以 page 為單位管理 I/O；空間效率提升也會降低換頁壓力。"
+    correct: true
+    explanation: |
+      BAB 章節指出，B-Tree 的 page-oriented layout 適合交給 buffer manager 管理；prefix truncation 與 dense leaves 等設計也提升空間效率，資料超過 buffer pool 時能減少需要從 SSD 讀回的 page 數。
+
+  - text: "Wormhole 較適合這種場景，因為 trie 與 hash table 可以減少 lookup 經過的索引層數，資料超過 buffer pool 時仍能降低查找路徑上的 CPU 成本。"
+    explanation: |
+      這個說法只考慮 lookup path，忽略了資料超過記憶體時的 pageability。Wormhole 的 MetaTrieHT 與分散 `malloc` 的 record 不容易切成固定大小 page，資料超過 buffer pool 時不如 page-oriented 的 B-Tree 適合 buffer manager。
+
+  - text: "ART 較適合這種場景，因為 trie node 會依 key 分布壓縮路徑、降低比較次數，用作 SSD-backed index 時也能維持良好的 locality。"
+    explanation: |
+      路徑壓縮有助於 in-memory lookup，但 ART 仍是 pointer-heavy trie，不是天然固定大小 page layout。資料需要換出再讀回時，系統需要穩定的 on-disk reference，而不是依賴 virtual memory address 的 pointer 結構。
+
+  - text: "Adaptive B-Tree 若使用 fingerprinting leaf 會較適合這種場景，因為 point lookup 主要掃描 fingerprint array；資料超過 buffer pool 時，降低 leaf 內 CPU 成本比 page I/O 更值得優先最佳化。"
+    explanation: |
+      Fingerprinting leaf 能降低 leaf 內的比較成本與 cache miss，但它不是 out-of-memory 場景的主要解法。當資料超過 buffer pool 時，關鍵還包括索引結構是否能以固定大小 page 管理，以及 page 讀回次數是否能被空間效率降低。
