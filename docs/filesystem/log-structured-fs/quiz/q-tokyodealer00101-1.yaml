@@ -12,7 +12,7 @@ question: |
   | S2 | 偏 hot，常被覆寫 | 45 | 55 |
   | S3 | 偏 cold，少被覆寫 | 68 | 32 |
 
-  若目標是在這次 cleaning 中用較低搬移成本回收較多可用空間，應優先選哪個 segment？
+  若目標是用較低搬移成本回收較多可用空間，應優先選哪個 segment？
 options:
   - text: "選 S0，因為它偏 cold，清理後比較不會很快又產生新的 invalid blocks，可以避免 cleaner 反覆處理同類資料。"
     explanation: |
@@ -20,10 +20,10 @@ options:
   - text: "選 S1，因為它偏 hot 且多數 blocks 已經失效，清理時只需要搬移少量仍有效的資料。"
     correct: true
     explanation: |
-      S1 需要搬移的 valid blocks 最少，且能回收的 invalid blocks 最多。`segment cleaning` 的搬移成本主要來自仍有效的 blocks；在題目限定的「這次 cleaning」目標下，S1 的成本效益最好。
+      S1 需要搬移的 valid blocks 最少，且能回收的 invalid blocks 最多。`segment cleaning` 的搬移成本主要來自仍有效的 blocks；依表中的 valid / invalid blocks 數量判斷，S1 的成本效益最好。
   - text: "選 S2，因為它是偏 hot 的 segment，未來資料可能很快又被覆寫，先清理它可以讓後續 append write 更容易維持 sequential write。"
     explanation: |
-      S2 的資料偏 hot，代表之後可能產生更多 invalid blocks，但題目問的是現在要挑哪個 victim segment。S2 目前仍要搬移 45 個 valid blocks，成本高於 S1；是否偏 hot 不能取代目前 valid / invalid 數量的判斷。
+      S2 的資料偏 hot，代表之後可能產生更多 invalid blocks，但題目問的是要從表中挑哪個 victim segment。S2 目前仍要搬移 45 個 valid blocks，成本高於 S1；是否偏 hot 不能取代目前 valid / invalid 數量的判斷。
   - text: "選 S3，因為它偏 cold 且仍有 68 個 valid blocks，把這些資料集中搬到 log tail 後，可以減少之後讀取時的 fragmentation。"
     explanation: |
       S3 要搬移 68 個 valid blocks，卻只能回收 32 個 invalid blocks 對應的空間，清理成本不划算。`segment cleaning` 的直接目標是回收空間，不是主動搬移大量仍有效的冷資料。
