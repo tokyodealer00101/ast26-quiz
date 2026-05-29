@@ -1,16 +1,16 @@
 author: tokyodealer00101
 date: 2026-05-28
 question: |
-  某個 Log-Structured File System 將磁碟切成固定大小的 segment。每個 segment 都有 100 個 blocks，背景 cleaner 準備挑一個 victim segment 做 `segment cleaning`。清理時，系統必須先把仍有效的 blocks 複製到新的 log tail，舊 segment 才能整段釋放。
+  某個 Log-Structured File System 的背景 cleaner 準備從下列候選 segment 中挑一個 victim 做 `segment cleaning`。清理時，系統必須先把仍有效的 blocks 複製到新的 log tail，舊 segment 才能整段釋放。
 
   目前候選 segment 如下：
 
-  | Segment | 更新型態 | valid blocks | invalid blocks |
+  | Segment | 資料更新頻率 | valid blocks | invalid blocks |
   |---|---|---:|---:|
-  | S0 | 偏 cold，少被覆寫 | 82 | 18 |
-  | S1 | 偏 hot，常被覆寫 | 20 | 80 |
-  | S2 | 偏 hot，常被覆寫 | 45 | 55 |
-  | S3 | 偏 cold，少被覆寫 | 68 | 32 |
+  | S0 | 低（偏 cold） | 82 | 18 |
+  | S1 | 高（偏 hot） | 20 | 80 |
+  | S2 | 高（偏 hot） | 45 | 55 |
+  | S3 | 低（偏 cold） | 68 | 32 |
 
   若目標是用較低搬移成本回收較多可用空間，應優先選哪個 segment？
 options:
@@ -24,6 +24,6 @@ options:
   - text: "選 S2，因為它偏 hot 且已有超過一半的 blocks 失效；先清理它可以回收不少空間，同時搬移成本看起來仍可接受。"
     explanation: |
       S2 確實有 55 個 invalid blocks，清理後能回收不少空間，但仍需搬移 45 個 valid blocks。相較之下，S1 只需搬移 20 個 valid blocks，且可回收 80 個 invalid blocks 對應的空間，所以 S1 的成本效益仍較好。
-  - text: "選 S3，因為它偏 cold 且仍有 68 個 valid blocks，把這些資料集中搬到 log tail 後，可以減少之後讀取時的 fragmentation。"
+  - text: "選 S3，因為它偏 cold 且 invalid blocks 比 S0 多；清理它可以比 S0 回收更多空間，同時 cold 資料後續更新少。"
     explanation: |
-      S3 要搬移 68 個 valid blocks，卻只能回收 32 個 invalid blocks 對應的空間，清理成本不划算。`segment cleaning` 的直接目標是回收空間，不是主動搬移大量仍有效的冷資料。
+      S3 雖然比 S0 能回收更多空間，但仍要搬移 68 個 valid blocks，成本明顯高於 S1。依課程中的 `segment cleaning` 流程，應優先選 invalid blocks 多、valid blocks 少的 segment；S1 的成本效益最好。
