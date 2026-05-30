@@ -1,0 +1,18 @@
+author: YYL-1220
+date: 2026-05-29
+question: |
+  RAID 10 與 RAID 01 的主要區別在於？
+options:
+  - text: "RAID 10 在單顆磁碟故障後的容錯能力通常優於 RAID 01"
+    correct: true
+    explanation: |
+      RAID 10 只有在同一個鏡像組內的磁碟皆故障時才會丟失數據，而 RAID 01 一旦兩邊 stripe 各失效一顆磁碟就會導致整個陣列丟失數據。
+  - text: "RAID 10 的讀取速度遠快於 RAID 01"
+    explanation: |
+      Read bandwidth 相似，兩者效能的差異通常不在 read latency 或 throughput 上。
+  - text: "RAID 10 提供的有效容量只有 RAID 01 的一半"
+    explanation: |
+      兩者 space efficiency 均為 0.5
+  - text: "RAID 01 使用 Parity 計算而 RAID 10 不使用"
+    explanation: |
+      兩者都是 RAID 0 與 RAID 1 的組合，皆不涉及 parity 。

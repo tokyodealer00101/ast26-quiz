@@ -1,0 +1,19 @@
+author: YYL-1220
+date: 2026-05-29
+question: |
+  某 RAID 4 陣列在 random small-write workload 下，parity disk 承擔了所有 stripe 的 parity 更新，成為效能與壽命的瓶頸，I/O latency 跟 write amplification 都明顯高於其他磁碟。請問 RAID 5 可以透過什麼機制改善？
+options:
+  - text: "將 parity block 交錯分散在陣列中的所有磁碟上"
+    correct: true
+    explanation: |
+      RAID 4 的瓶頸在於將所有 parity 固定在單一專用磁碟上，導致每次 small-write 都要對該磁碟進行一讀一寫的操作。 RAID 5 藉由 Rotating Parity 將 parity block 分佈至陣列內的所有磁碟，使不同且平行的 write request （例如同時寫入 block 1 與 block 10 ）可以分散到不同磁碟更新各自對應的 parity ，從而實現 I/O 平行化，成功打破了原本單一 parity disk 的效能與壽命瓶頸 。
+
+  - text: "捨棄 XOR 計算以減少 write latency"
+    explanation: |
+      RAID 5 依然需要高頻率執行 bitwise XOR 運算來計算 parity ，並沒有捨棄該計算，因此無法以此減少 latency。
+  - text: "使用 mirroring 完全替代 parity block"
+    explanation: |
+      雖然 mirroring 能提供極高的 random I/O 效能 ，但空間利用率只有 50% ，無法維持原本系統之容量利用率。
+  - text: "增加陣列中磁碟的總數量（N）來提高整體的容錯能力"
+    explanation: |
+      升級前後的硬碟總數保持不變，且從 reliability 來看，RAID 5 與 RAID 4 的容錯能力相同，都只能容忍單一磁碟損壞。
