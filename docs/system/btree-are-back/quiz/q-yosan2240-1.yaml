@@ -1,0 +1,20 @@
+author: yosan2240
+date: 2026-05-27
+question: |
+  BAB 論文中 comparison-based leaf 採用 heads + hints 結構：heads 儲存每個 key 的前 4 bytes 用於 binary search，hints 是 heads 等距取樣的子集，scan hints 可將後續 binary search 範圍壓縮到一小區段。預設 hints 為 16 個。
+
+  若把 hints 從 16 提高到 64，binary search 範圍理論上可從 1/16 縮到 1/64，但 benchmark 顯示 point lookup 延遲反而變差。下列哪一項最能解釋？
+options:
+  - text: "取樣數增加會讓 key-adaption 判斷變慢，使 leaf 在 comparison-based 與 fingerprinting 之間切換的時機延遲。"
+    explanation: |
+      Hints array 屬於 comparison-based leaf 內部的查找加速結構，key-adaption 則是在 split/merge 時依 key 分布決定 leaf layout 的機制。兩者運作階段不同，hints 數量不影響 key-adaption 的決策。
+  - text: "16 個 4-byte hints 剛好填滿一條 64-byte cache line，scan 只需一次 cache miss。改為 64 個後 hints 跨 4 條 cache line，多出的 cache miss 抵銷了縮小 binary search 範圍的好處。"
+    correct: true
+    explanation: |
+      x86 cache line 為 64 bytes，4-byte hint × 16 等於 64 bytes，hints 陣列剛好對齊一條 cache line，scan 只需一次 cache fill。改為 64 個後陣列變成 256 bytes，跨 4 條 cache line，多 3 次 cache miss。後續 binary search 範圍從 ~16 個 heads 縮到 ~4 個 heads，但 binary search 在已預取的 heads 上本來就只剩少數比較，省下的成本不足以抵銷 hints scan 多付出的 cache miss。
+  - text: "64 個 hints 佔用過多 page 空間，使 leaf 可容納的 record 變少，fan-out 下降、樹高增加，每次 lookup 多走一層。"
+    explanation: |
+      Hints 從 64 bytes 增為 256 bytes 相對於 4 KB 或 16 KB page 只佔 1–5%，fan-out 影響有限，不太可能直接讓樹高多一層。延遲變化發生在 leaf 內部，不是樹高造成的。
+  - text: "Hints 變大後 SIMD 一次無法處理 64 個 entry，比較邏輯退化成 scalar linear search。"
+    explanation: |
+      SIMD 暫存器寬度由 CPU 硬體決定，與陣列大小無關。64 個 hints 只是讓 SIMD 多執行幾輪比較，不會退化成 scalar。瓶頸在 cache miss，不在 SIMD。

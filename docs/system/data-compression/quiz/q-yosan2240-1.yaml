@@ -1,0 +1,18 @@
+author: yosan2240
+date: 2026-05-27
+question: |
+  將一張 100 MB 的 JPG 用 zstd 做 lossless 壓縮，輸出檔案約 100.3 MB，比原檔略大，且壓縮過程正常完成。下列哪一項最能解釋這個結果？
+options:
+  - text: "JPG 內部已經壓縮過，bytes 分布接近隨機，幾乎沒有可利用的重複片段；當資料本身已接近它的 entropy 下限時，lossless 壓縮無法再縮小，而 zstd 寫入的 header 等額外資訊反而讓檔案略為變大。"
+    correct: true
+    explanation: |
+      JPG 的編碼流程（DCT、quantization、Huffman/arithmetic coding）讓輸出的 bitstream 已逼近其 entropy。由 Shannon source coding theorem，lossless 壓縮的平均長度不可能低於 input entropy，所以 zstd 找不到 redundancy 可以利用。當它判定某段資料壓不動時會直接原樣搬運，但 zstd 的 frame 與 block header 仍會寫入，對這種不可壓縮的資料就是淨增長。
+  - text: "是因為壓縮 level 設太低，只要把 zstd 調到最高 level 就一定能壓下來。"
+    explanation: |
+      level 控制的是「搜尋重複片段有多徹底」。但當 input 本身沒有可利用的重複時，再高的 level 也找不出不存在的規律，檔案大小不會改善。這是「level 越高一定越小」的常見誤解。
+  - text: "因為 JPG 是 lossy 格式，zstd 無法處理 lossy 資料才壓不下來。"
+    explanation: |
+      zstd 是在 byte 層級做壓縮，不在乎資料是不是 lossy。同樣的現象在 lossless 的「已經 gzip 過的檔案」上也會發生，可見關鍵在 entropy，而不是 lossy 與否。
+  - text: "輸出比原檔大，代表這次壓縮失敗或檔案損壞了。"
+    explanation: |
+      壓縮不保證一定變小。對不可壓縮的資料，一個正常完成的壓縮本來就可能讓檔案略為變大（多了 header）。題目也明講流程正常完成，所以不是失敗或損壞。
