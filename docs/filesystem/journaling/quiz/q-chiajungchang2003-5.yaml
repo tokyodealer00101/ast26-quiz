@@ -1,19 +1,19 @@
 author: chiajungchang2003
 date: 2026-05-29
 question: |
-  在 ext4 上對一個檔案執行 `rename()` 後立即呼叫 `fsync()`。比較傳統 JBD2 與 Fast Commit 的 journal 寫入行為，下列何者最正確？
+  在 ext4 上對一個檔案執行 `rename()` 後立即呼叫 `fsync()`。比較傳統 JBD2 與 FastCommit 的 journal 寫入行為，下列何者最正確？
 
 options:
-  - text: " JBD2 須將受影響的 metadata block 以 physical image 的形式寫入 journal；Fast Commit 則只需記錄 rename 操作的 logical 描述，因此 journal 寫入量通常較小。"
+  - text: " JBD2 須將受影響的 metadata block 以 physical image 的形式寫入 journal；FastCommit 則只需記錄 rename 操作的 logical 描述，因此 journal 寫入量通常較小。"
     correct: true
     explanation: |
-      JBD2 採用 physical journaling，會將修改後的 metadata block 內容寫入 journal；而 Fast Commit 則採用 logical journaling，只記錄如 rename、link、unlink 等檔案系統操作。因此對於 rename 這類只造成少量 metadata 變動的操作，Fast Commit 通常能大幅減少 journal 寫入量，改善 JBD2 的 granularity mismatch 問題。
+      JBD2 採用 physical journaling，會將修改後的 metadata block 內容寫入 journal；而 FastCommit 則採用 logical journaling，只記錄如 rename、link、unlink 等檔案系統操作。因此對於 rename 這類只造成少量 metadata 變動的操作，FastCommit 通常能大幅減少 journal 寫入量，改善 JBD2 的 granularity mismatch 問題。
   - text: "兩者的 journal 寫入量接近，因為 rename 通常只修改少數 bytes，而 JBD2 只會記錄實際變動的 bytes。"
     explanation: |
-      JBD2 並不是 byte-level journaling，而是 block-level journaling。即使 rename 實際上只修改少量 metadata bytes，JBD2 仍需要將整個受影響的 metadata block 寫入 journal。因此 journal 寫入量通常遠大於實際修改的資料量，這正是 Fast Commit 想要解決的問題
-  - text: "Fast Commit 仍需將所有受影響的 metadata block 完整寫入 journal，只是在 recovery 時改用 logical replay，因此寫入量與 JBD2 幾乎相同。"
+      JBD2 並不是 byte-level journaling，而是 block-level journaling。即使 rename 實際上只修改少量 metadata bytes，JBD2 仍需要將整個受影響的 metadata block 寫入 journal。因此 journal 寫入量通常遠大於實際修改的資料量，這正是 FastCommit 想要解決的問題
+  - text: "FastCommit 仍需將所有受影響的 metadata block 完整寫入 journal，只是在 recovery 時改用 logical replay，因此寫入量與 JBD2 幾乎相同。"
     explanation: |
-      Fast Commit 的核心改進並不只是改變 recovery 流程，而是改變 journal 的記錄方式。對於支援的操作，Fast Commit 只需記錄對應的 logical operation，而不需要將所有受影響的 metadata block 完整寫入 journal，因此 journal 寫入量通常明顯低於 JBD2。
-  - text: "JBD2 只記錄檔案系統操作（例如 rename），而 Fast Commit 則額外記錄完整 metadata block，因此 Fast Commit 的 journal 寫入量通常較大"
+      FastCommit 的核心改進並不只是改變 recovery 流程，而是改變 journal 的記錄方式。對於支援的操作，FastCommit 只需記錄對應的 logical operation，而不需要將所有受影響的 metadata block 完整寫入 journal，因此 journal 寫入量通常明顯低於 JBD2。
+  - text: "JBD2 只記錄檔案系統操作（例如 rename），而 FastCommit 則額外記錄完整 metadata block，因此 FastCommit 的 journal 寫入量通常較大"
     explanation: |
-      此敘述將兩者的設計理念完全顛倒。實際上 JBD2 記錄的是 metadata block 的 physical image，而 Fast Commit 記錄的是檔案系統操作的 logical 描述。Fast Commit 的設計目的正是減少 journal 寫入量與 commit latency，因此在多數小型 metadata 操作下，其 journal 開銷通常比 JBD2 更小。
+      此敘述將兩者的設計理念完全顛倒。實際上 JBD2 記錄的是 metadata block 的 physical image，而 FastCommit 記錄的是檔案系統操作的 logical 描述。FastCommit 的設計目的正是減少 journal 寫入量與 commit latency，因此在多數小型 metadata 操作下，其 journal 開銷通常比 JBD2 更小。

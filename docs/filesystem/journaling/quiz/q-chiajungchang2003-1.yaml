@@ -1,7 +1,7 @@
 author: chiajungchang2003
 date: 2026-05-29
 question: |
-  根據下列對 Journaling 以及 Fast Commit 的描述，哪一項是正確的？
+  根據下列對 Journaling 以及 FastCommit 的描述，哪一項是正確的？
 
 options:
   - text: "FastCommit 用 logical FCLog 解決了 JBD2 因 granularity mismatch（改 8 bytes 卻要寫 24 KB）造成的頻寬浪費。Recovery 時則先 replay 最近一次 JBD2 slow commit，再依序 replay 之後累積的 FCLog entries。"
