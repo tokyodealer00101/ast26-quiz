@@ -1,0 +1,19 @@
+author: chiajungchang2003
+date: 2026-05-29
+question: |
+  根據下列對 Journaling 以及 Fast Commit 的描述，哪一項是正確的？
+
+options:
+  - text: "FastCommit 用 logical FCLog 解決了 JBD2 因 granularity mismatch（改 8 bytes 卻要寫 24 KB）造成的頻寬浪費。Recovery 時則先 replay 最近一次 JBD2 slow commit，再依序 replay 之後累積的 FCLog entries。"
+    correct: true
+    explanation: |
+      FastCommit 透過記錄邏輯層級的檔案系統操作（FCLog）取代頻繁的 physical journaling，並定期以 JBD2 slow commit 建立 checkpoint，因此解決了 JBD2 因 granularity mismatch 所造成的頻寬浪費。復原時則先 replay 最近一次 JBD2 commit，再 replay 後續 FCLog entries 即可恢復最新狀態。
+  - text: "ext4 writeback mode 下無法保證 data 和 metadata 的寫入順序，但是斷電後仍然有辦法將尚未寫入正確位置的 data 透過 replay 的方式寫入正確位置"
+    explanation: |
+      在 writeback mode 下， data 本身是沒有被寫入 log 中的，所以當系統斷電後，這些 data 是無法透過 replay 的方式寫入正確位置的。
+  - text: "在 Ordered mode 下，因為資料已經直接寫入硬碟正式位置，所以 checkpoint 動作僅是為了核對資料正確性，並非絕對必要。"
+    explanation: |
+      Checkpoint 並非選配的校對程序，而是將日誌中已提交的 Metadata 內容，真正搬回硬碟正式位置的必要動作
+  - text: "FastCommit 的效能提升主要來自於它完全取代了 JBD2 ，並將 Physical journaling 改為 Logical journaling"
+    explanation: |
+      FastCommit 是一種 Hybrid journaling 方式，每 5 秒仍然會跑一次 slow commit 來確保資料安全性，所以它並沒有完全取代 JBD2 ，而是與 JBD2 共存。
