@@ -1,0 +1,22 @@
+author: smile-a-lot
+date: 2026-05-29
+question: |
+ 某工程師把 HNSW 的 layer0 放在新的 SLC SSD（error-free），其他 layer 放在快寫穿的 QLC SSD（error rate 較高）。搜尋時，系統能偵測 node 是否 error 但無法修復，若遇到 error node 就跳過。假設某層所有 candidate 都 error，則直接降到下一層。假設 layer0 是 connected graph，efSearch=200、回傳 top-10，下列關於 recall 與 latency 的敘述何者錯誤？
+options:
+  - text: "對比 error rate = 0 的 HNSW，recall 可能會下降。"
+    explanation: |
+      最終仍然在 layer0 做 beam search，上層導航失敗可能使搜尋卡在 layer0 的局部極值，recall 因此降低。
+
+  - text: "對比 error rate = 0 的 HNSW，recall 跟 latency 都維持不變。"
+    correct: true
+    explanation: |
+      最終仍然在 layer0 做 beam search，上層導航失敗可能使搜尋卡在 layer0 的局部極值，recall 因此降低。
+      上層的 error 會導致搜尋過程中頻繁地降層，無法發揮 HNSW 的層級導航優勢，在 layer0 做了太多次 search，導致 latency 大幅增加。
+      
+  - text: "latency 會大幅增加，甚至可能無法在合理時間內完成搜尋。"
+    explanation: |
+      上層的 error 會導致搜尋過程中頻繁地降層，無法發揮 HNSW 的層級導航優勢，在 layer0 做了太多次 search，導致 latency 大幅增加。
+
+  - text: "如果 error rate 夠小，latency 仍然可以維持在合理範圍內。"
+    explanation: |
+      如果 error rate 夠小，搜尋過程中大多數的 node 都是可用的，仍然可以有效利用 HNSW 的層級導航優勢，保持 latency 在合理範圍內。
