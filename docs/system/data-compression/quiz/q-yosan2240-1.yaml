@@ -3,7 +3,7 @@ date: 2026-05-27
 question: |
   將一張 100 MB 的 JPG 用 zstd 做 lossless 壓縮，輸出檔案約 100.3 MB，比原檔略大，且壓縮過程正常完成。下列哪一項最能解釋這個結果？
 options:
-  - text: "JPG 內部已經壓縮過，bytes 分布接近隨機，幾乎沒有可利用的重複片段；當資料本身已接近它的 entropy 下限時，lossless 壓縮無法再縮小，而 zstd 寫入的 header 等額外資訊反而讓檔案略為變大。"
+  - text: "JPG 內部已經編碼壓縮過，bytes 分布接近隨機，zstd 無法縮小檔案；它加入的 metadata 反而讓檔案略為變大。"
     correct: true
     explanation: |
       JPG 的編碼流程（DCT、quantization、Huffman/arithmetic coding）讓輸出的 bitstream 已逼近其 entropy。由 Shannon source coding theorem，lossless 壓縮的平均長度不可能低於 input entropy，所以 zstd 找不到 redundancy 可以利用。當它判定某段資料壓不動時會直接原樣搬運，但 zstd 的 frame 與 block header 仍會寫入，對這種不可壓縮的資料就是淨增長。
