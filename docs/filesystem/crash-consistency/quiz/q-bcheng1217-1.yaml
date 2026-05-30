@@ -1,0 +1,18 @@
+author: bcheng1217
+date: 2026-05-29
+question: |
+  一個 `write()` 系統呼叫在寫入資料時，必須在記憶體中更新 data block、inode、block bitmap 等多個結構。由於記憶體的 writeback 沒有順序保證，斷電可能導致 metadata 與 data 不同步。關於不同步所引發的後果，下列敘述何者正確？
+options:
+  - text: "若 inode 的 extent list 與檔案大小已寫入硬碟，但 data block 的新內容尚未寫入就發生斷電，使用者讀取該檔案時可能會讀到舊的殘留資料，引發 security leak。"
+    correct: true
+    explanation: |
+      這個敘述是正確的。當 inode 已經指向新分配的 block 且更新了檔案大小，但真正的 data 卻因為沒寫完而遺失時，該 block 內還留著前任使用者刪除檔案後的舊內容。此時呼叫 `read()` 會合法地讀出這些舊資料，從而造成 stale-content 資安漏洞。
+  - text: "若只有 data block 的內容與 block bitmap 成功寫入硬碟，而 inode 尚未更新，這會導致該區塊成為「定時炸彈」，未來系統分配空間時會發生兩個檔案互相覆蓋的情況。"
+    explanation: |
+      data + bitmap 寫完但 inode 未更新時，會產生 orphan block，資料被孤立但不會被覆蓋。真正會造成資料覆蓋的是「inode 寫完但 bitmap 未更新」的情況。
+  - text: "若只有 block bitmap 成功標記為 used，其餘結構皆未寫入硬碟，會導致系統產生 extent 超出的幽靈空間預留，且這種類型的錯誤無法透過 `fsck` 工具修復。"
+    explanation: |
+      如果只有 bitmap 更新，該 block 會變成沒有任何 inode 指向它的 orphan block，造成單純的空間浪費。這種錯誤是 `fsck` 最拿手的，它只要在開機掃描硬碟時，發現有 block 被標記為 used 卻沒有人指向上它，就會將其釋放。
+  - text: "為了徹底解決上述斷電造成的不同步問題，現代檔案系統主要依賴 `fsck` 在系統寫入時於背景持續運作，即時防堵資料損壞。"
+    explanation: |
+      `fsck` 是在重開機 mount 階段才執行的「事後補救工具」，不僅執行速度慢，且有其極限（例如完全無法察覺上述選項 A 的資安漏洞，因為結構上是合法的）。為了解決不同步的問題，現代檔案系統的核心設計是依賴 **Crash Consistency 機制**（如 Copy-on-Write、Journaling、Log-Structured），並非靠 `fsck`。
