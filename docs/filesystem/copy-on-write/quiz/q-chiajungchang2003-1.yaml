@@ -1,0 +1,22 @@
+author: chiajungchang2003
+date: 2026-05-29
+question: |
+  下列關於 Btrfs 的 Copy-on-Write（CoW）寫入機制與 root pointer 更新的敘述，何者 **錯誤**？
+
+options:
+  - text: "由於 root pointer 僅有 8-byte，遠小於硬碟的 sector size，因此硬體無法保證其寫入 atomicity，Btrfs 必須依賴 journaling 才能維持 crash consistency。"
+    correct: true
+    explanation: |
+      錯誤。Btrfs 並不依賴傳統 journaling 來維持 metadata consistency，而是透過 Copy-on-Write 機制先建立完整的新 B-tree，最後再以 atomic root pointer update 完成 transaction commit。若系統在 pointer 更新前 crash，filesystem 仍會看到完整的舊 tree；若更新成功，則會切換到完整的新 tree。此外，硬體通常保證至少一個 sector 的原子寫入，因此這類小型 pointer 更新在實務上通常可視為 atomic。
+
+  - text: "更新 superblock 中的 root pointer，是整個 CoW 流程中唯一的 in-place update。"
+    explanation: |
+      正確。在 Copy-on-Write filesystem 中，資料與 metadata 的修改都不會直接覆寫舊 block，而是配置新的 block 並建立新的 B-tree node。只有在 transaction commit 的最後一步，filesystem 才會直接修改 superblock 中的 root pointer，使其從舊的 B-tree 切換到新的 B-tree。
+
+  - text: "在 root pointer 更新成功之前，從檔案系統的角度看，disk state 仍然是舊版本的 filesystem tree。"
+    explanation: |
+      正確。在 root pointer 更新完成前，新建立的 B-tree 尚未成為 active tree，因此 filesystem 仍會看到舊版本的 tree；只有在 pointer 更新完成後，新版本才會成為可見的 filesystem state。這也是 CoW filesystem 能快速建立 snapshot 的原因之一。
+
+  - text: "superblock 中儲存了指向 B-tree root node 的 pointer，用來決定目前 active 的 filesystem tree。"
+    explanation: |
+      正確。CoW transaction commit 的最後一步，就是更新 superblock 中的 root pointer，使 filesystem 從舊 tree 切換到新 tree。
