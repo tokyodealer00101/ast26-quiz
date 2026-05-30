@@ -1,0 +1,21 @@
+author: Ivan711031
+date: 2026-05-30
+question: |
+  Niko 對既有的 1 MB 檔案 append 10 MB。兩種情境：
+  【情境一】沒呼叫 fsync()，10 秒後（writeback 之前）斷電。
+  【情境二】呼叫 fsync() 後，kernel 正在 writeback 時斷電。
+  兩個情境對 on-disk 結構造成什麼差異？下列敘述何者正確？
+options:
+  - text: "【情境一】斷電後 on-disk 會維持 1 MB，沒有結構不一致。因為四個更新步驟都還在 page cache 裡。"
+    correct: true
+    explanation: |
+      在情境一，包含 data block、bitmap、inode extent 與 size 這四個步驟都還只在記憶體裡，硬碟完全沒被動到。
+  - text: "【情境一】會破壞 crash consistency，因為 delayed allocation 會先將 Block bitmap 標記為 used 寫入硬碟以預留空間。"
+    explanation: |
+      allocator 只有在 periodic writeback 或 `fsync()` 被呼叫時，才會決定實體位置，因此在情境一時 Block bitmap 根本還沒寫入硬碟。
+  - text: "【情境二】fsync 在斷電時保證資料 atomic 寫入，因此 on-disk 一定是 1 MB 或 11 MB 的乾淨狀態。"
+    explanation: |
+      情境二中，`fsync()` 無法消除那四個 on-disk structure 必須分別寫入硬碟所帶來的順序風險。
+  - text: "【情境一、二】兩者對 on-disk 的影響相同。因為只要應用程式呼叫 `write()`，不管有沒有 `fsync()`，kernel 都會立刻把 data block 寫入 SSD，斷電都會導致這 10 MB 變成沒有 inode 指向的垃圾資料。"
+    explanation: |
+      ext4 的 delayed allocation 是把「何時寫」與「寫到哪」分開。呼叫 `write()` 時只是把 dirty page 留在 page cache 裡，並不會立刻把 data block 寫入 SSD。只有在 writeback 被觸發時，資料才會搬移至硬碟。
